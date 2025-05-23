@@ -12,18 +12,25 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "ios": {
-      "supportsTablet": true
-    },
     "android": {
+      "package": "com.mxm.hugodesouzacaramez.taskmaster",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true
     },
+    "ios": {
+      "bundleIdentifier": "com.mxm.hugodesouzacaramez.taskmaster",
+      "supportsTablet": true
+    },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "2ccd7404-15c4-4d9a-8abb-fd90812dc1fc"
+      }
     }
   }
 }

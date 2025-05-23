@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useContext, useEffect, useReducer } from 'react';
 import { Task } from '../types';
-
+import { useAuth } from '../../auth/context/AuthContext';
 
 type TaskState = {
   tasks: Task[];
@@ -38,21 +38,37 @@ const taskReducer = (state: TaskState, action: TaskAction): TaskState => {
 };
 
 export function TaskProvider({ children }: { children: React.ReactNode }) {
+  const { state: authState } = useAuth();
   const [state, dispatch] = useReducer(taskReducer, { tasks: [] });
 
   useEffect(() => {
     const loadTasks = async () => {
-      const savedTasks = await AsyncStorage.getItem('tasks');
-      if (savedTasks) {
-        dispatch({ type: 'LOAD_TASKS', tasks: JSON.parse(savedTasks) });
+      if (!authState.user) return;
+      
+      try {
+        const savedTasks = await AsyncStorage.getItem(`tasks_${authState.user.id}`);
+        if (savedTasks) {
+          dispatch({ type: 'LOAD_TASKS', tasks: JSON.parse(savedTasks) });
+        }
+      } catch (error) {
+        console.error('Error loading tasks:', error);
       }
     };
     loadTasks();
-  }, []);
+  }, [authState.user]);
 
   useEffect(() => {
-    AsyncStorage.setItem('tasks', JSON.stringify(state.tasks));
-  }, [state.tasks]);
+    const saveTasks = async () => {
+      if (!authState.user) return;
+      
+      try {
+        await AsyncStorage.setItem(`tasks_${authState.user.id}`, JSON.stringify(state.tasks));
+      } catch (error) {
+        console.error('Error saving tasks:', error);
+      }
+    };
+    saveTasks();
+  }, [state.tasks, authState.user]);
 
   return (
     <TaskContext.Provider value={{ state, dispatch }}>

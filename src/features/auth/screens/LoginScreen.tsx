@@ -2,9 +2,9 @@ import { Controller, useForm } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
 import { View, StyleSheet } from 'react-native';
 import { Button, TextInput } from 'react-native-paper';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { userService } from '../context/AuthContext';
 
 type FormData = {
   email: string;
@@ -23,10 +23,15 @@ export function LoginScreen() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await AsyncStorage.setItem('userToken', 'dummy_token');
-      dispatch({ type: 'SIGN_IN', token: 'dummy_token' });
+      const user = await userService.login(data.email, data.password);
+      
+      if (user) {
+        dispatch({ type: 'SIGN_IN', user });
+      } else {
+        dispatch({ type: 'SET_ERROR', error: 'Credenciais inválidas' });
+      }
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', error: 'Login failed' });
+      dispatch({ type: 'SET_ERROR', error: 'Erro no login' });
     }
   };
 

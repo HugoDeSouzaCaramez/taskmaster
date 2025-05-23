@@ -6,12 +6,48 @@ import { TaskProvider } from './src/features/tasks/context/TaskContext';
 import { AuthNavigator } from './src/features/auth/navigation/AuthNavigator';
 import { MainNavigator } from './src/features/tasks/navigation/MainNavigator';
 import { useAuth } from './src/features/auth/context/AuthContext';
-import { View, StyleSheet, SafeAreaView, Platform, StatusBar } from 'react-native';
+import { View, StyleSheet, SafeAreaView } from 'react-native';
 import { Theme } from './src/theme';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect } from 'react';
+import uuid from 'react-native-uuid';
 
 const Stack = createStackNavigator();
 
+const mockUsers = [
+  {
+    id: uuid.v4(),
+    email: 'usuario@teste.com',
+    password: 'senha123'
+  }
+];
+
+const mockTasks = [
+  {
+    id: uuid.v4(),
+    title: 'Tarefa de Exemplo',
+    description: 'Esta é uma tarefa de exemplo',
+    status: 'todo',
+    userId: mockUsers[0].id
+  }
+];
+
 export default function App() {
+  useEffect(() => {
+    const initializeMockData = async () => {
+      try {
+        const existingUsers = await AsyncStorage.getItem('users');
+        if (!existingUsers) {
+          await AsyncStorage.setItem('users', JSON.stringify(mockUsers));
+          await AsyncStorage.setItem(`tasks_${mockUsers[0].id}`, JSON.stringify(mockTasks));
+        }
+      } catch (error) {
+        console.error('Error initializing mock data:', error);
+      }
+    };
+    initializeMockData();
+  }, []);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <GestureHandlerRootView style={{ flex: 1 }}>
@@ -38,7 +74,7 @@ function RootNavigator() {
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {state.userToken ? (
+      {state.user ? (
         <Stack.Screen name="Main" component={MainNavigator} />
       ) : (
         <Stack.Screen

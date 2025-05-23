@@ -2,9 +2,9 @@ import { Controller, useForm } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
 import { View, StyleSheet } from 'react-native';
 import { Button, TextInput } from 'react-native-paper';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { userService } from '../context/AuthContext';
 
 type FormData = {
   email: string;
@@ -26,15 +26,18 @@ export function SignupScreen() {
   const onSubmit = async (data: FormData) => {
     try {
       if (data.password !== data.confirmPassword) {
-        dispatch({ type: 'SET_ERROR', error: 'Passwords do not match' });
+        dispatch({ type: 'SET_ERROR', error: 'As senhas não coincidem' });
         return;
       }
 
-      // Mock chamada API
-      await AsyncStorage.setItem('userToken', 'dummy_token');
-      dispatch({ type: 'SIGN_IN', token: 'dummy_token' });
+      const newUser = await userService.createUser({
+        email: data.email,
+        password: data.password
+      });
+      
+      navigation.navigate('Login');
     } catch (error) {
-      dispatch({ type: 'SET_ERROR', error: 'Signup failed' });
+      dispatch({ type: 'SET_ERROR', error: 'Erro no cadastro' });
     }
   };
 

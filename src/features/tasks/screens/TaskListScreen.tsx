@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Button } from 'react-native-paper';
 import { useAuth } from '../../auth/context/AuthContext';
+import { userService } from '../../auth/context/AuthContext'; 
 import { Theme } from '../../../theme';
 
 type RootStackParamList = {
@@ -18,6 +19,16 @@ export function TaskListScreen() {
   const { state } = useTasks();
   const { dispatch } = useAuth();
   const navigation = useNavigation<NavigationProp>();
+
+
+  const handleLogout = async () => {
+  try {
+    await userService.logout();
+    dispatch({ type: 'SIGN_OUT' });
+  } catch (error) {
+    console.error('Erro ao fazer logout:', error);
+  }
+};
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -34,7 +45,7 @@ export function TaskListScreen() {
 
           <Button
             mode="text"
-            onPress={() => dispatch({ type: 'SIGN_OUT' })}
+            onPress={handleLogout}
             style={styles.logoutButton}
             labelStyle={styles.buttonLabel}
           >

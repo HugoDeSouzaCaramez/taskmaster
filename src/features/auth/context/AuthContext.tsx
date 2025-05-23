@@ -1,14 +1,21 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import uuid from 'react-native-uuid';
+
+type User = {
+  id: string;
+  email: string;
+  password: string;
+};
 
 type AuthState = {
-  userToken: string | null;
+  user: User | null;
   isLoading: boolean;
   error: string | null;
 };
 
 type AuthAction =
-  | { type: 'SIGN_IN'; token: string }
+  | { type: 'SIGN_IN'; user: User }
   | { type: 'SIGN_OUT' }
   | { type: 'SET_LOADING'; isLoading: boolean }
   | { type: 'SET_ERROR'; error: string };
@@ -21,9 +28,9 @@ const AuthContext = createContext<{
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
     case 'SIGN_IN':
-      return { ...state, userToken: action.token, error: null };
+      return { ...state, user: action.user, error: null };
     case 'SIGN_OUT':
-      return { ...state, userToken: null };
+      return { ...state, user: null };
     case 'SET_LOADING':
       return { ...state, isLoading: action.isLoading };
     case 'SET_ERROR':
@@ -33,9 +40,43 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   }
 };
 
-export function AuthProvider ({ children }: { children: React.ReactNode }) {
+export const userService = {
+  createUser: async (userData: Omit<User, 'id'>): Promise<User> => {
+    const users = await AsyncStorage.getItem('users');
+    const newUser = { ...userData, id: uuid.v4() };
+    
+    if (users) {
+      const parsedUsers = JSON.parse(users);
+      await AsyncStorage.setItem('users', JSON.stringify([...parsedUsers, newUser]));
+    } else {
+      await AsyncStorage.setItem('users', JSON.stringify([newUser]));
+    }
+    
+    await AsyncStorage.setItem('currentUser', JSON.stringify(newUser));
+    return newUser;
+  },
+
+  login: async (email: string, password: string): Promise<User | null> => {
+    const users = await AsyncStorage.getItem('users');
+    if (users) {
+      const parsedUsers: User[] = JSON.parse(users);
+      const user = parsedUsers.find(u => u.email === email && u.password === password);
+      if (user) {
+        await AsyncStorage.setItem('currentUser', JSON.stringify(user));
+      }
+      return user || null;
+    }
+    return null;
+  },
+
+  logout: async () => {
+    await AsyncStorage.removeItem('currentUser');
+  }
+};
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, {
-    userToken: null,
+    user: null,
     isLoading: true,
     error: null,
   });
@@ -43,12 +84,13 @@ export function AuthProvider ({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const bootstrapAsync = async () => {
       try {
-        const userToken = await AsyncStorage.getItem('userToken');
-        if (userToken) {
-          dispatch({ type: 'SIGN_IN', token: userToken });
+        const userData = await AsyncStorage.getItem('currentUser');
+        if (userData) {
+          const user: User = JSON.parse(userData);
+          dispatch({ type: 'SIGN_IN', user });
         }
       } catch (e) {
-        console.error('Error loading token:', e);
+        console.error('Error loading user:', e);
       } finally {
         dispatch({ type: 'SET_LOADING', isLoading: false });
       }

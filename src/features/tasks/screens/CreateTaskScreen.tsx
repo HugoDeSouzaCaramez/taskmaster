@@ -4,8 +4,9 @@ import { Button, TextInput } from 'react-native-paper';
 import { useTasks } from '../context/TaskContext';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { v4 as uuidv4 } from 'uuid';
+import uuid from 'react-native-uuid';
 import { Theme } from '../../../theme';
+import { useAuth } from '../../auth/context/AuthContext';
 
 type FormData = {
   title: string;
@@ -19,14 +20,18 @@ type RootStackParamList = {
 export function CreateTaskScreen() {
   const { control, handleSubmit } = useForm<FormData>();
   const { dispatch } = useTasks();
+  const { state: authState } = useAuth();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
   const onSubmit = (data: FormData) => {
+    if (!authState.user) return;
+    
     const newTask = {
-      id: uuidv4(),
+      id: uuid.v4(),
       title: data.title,
       description: data.description,
       status: 'todo' as const,
+      userId: authState.user.id
     };
     
     dispatch({ type: 'ADD_TASK', task: newTask });

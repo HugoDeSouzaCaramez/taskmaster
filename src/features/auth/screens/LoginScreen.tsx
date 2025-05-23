@@ -47,6 +47,7 @@ export function LoginScreen() {
             onChangeText={field.onChange}
             style={styles.input}
             autoCapitalize="none"
+            keyboardType="email-address"
           />
         )}
       />

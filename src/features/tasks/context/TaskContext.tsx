@@ -43,7 +43,10 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const loadTasks = async () => {
-      if (!authState.user) return;
+      if (!authState.user) {
+        dispatch({ type: 'LOAD_TASKS', tasks: [] });
+        return;
+      }
       
       try {
         const savedTasks = await AsyncStorage.getItem(`tasks_${authState.user.id}`);

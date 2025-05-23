@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Button } from 'react-native-paper';
 import { useAuth } from '../../auth/context/AuthContext';
-import { userService } from '../../auth/context/AuthContext'; 
+import { userService } from '../../auth/context/AuthContext';
 import { Theme } from '../../../theme';
 
 type RootStackParamList = {
@@ -17,18 +17,17 @@ type NavigationProp = StackNavigationProp<RootStackParamList>;
 
 export function TaskListScreen() {
   const { state } = useTasks();
-  const { dispatch } = useAuth();
+  const { dispatch: authDispatch, state: authState } = useAuth();
   const navigation = useNavigation<NavigationProp>();
 
-
   const handleLogout = async () => {
-  try {
-    await userService.logout();
-    dispatch({ type: 'SIGN_OUT' });
-  } catch (error) {
-    console.error('Erro ao fazer logout:', error);
-  }
-};
+    try {
+      await userService.logout();
+      authDispatch({ type: 'SIGN_OUT' });
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -54,7 +53,7 @@ export function TaskListScreen() {
         </View>
 
         <FlatList
-          data={state.tasks}
+          data={state.tasks.filter(task => task.userId === authState.user?.id)}
           keyExtractor={item => item.id}
           renderItem={({ item }) => <TaskCard task={item} />}
           ListEmptyComponent={<Text style={styles.empty}>Nenhuma task encontrada</Text>}

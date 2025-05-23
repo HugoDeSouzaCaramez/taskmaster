@@ -1,7 +1,8 @@
 import { createStackNavigator } from '@react-navigation/stack';
+import { IconButton } from 'react-native-paper';
 import { KanbanScreen } from '../screens/KanbanScreen';
 import { TaskListScreen } from '../screens/TaskListScreen';
-import { IconButton } from 'react-native-paper';
+import { CreateTaskScreen } from '../screens/CreateTaskScreen';
 import { Theme } from '../../../theme';
 
 const Stack = createStackNavigator();
@@ -37,6 +38,11 @@ export const MainNavigator = () => (
       name="Kanban" 
       component={KanbanScreen} 
       options={{ title: 'Quadro Kanban' }}
+    />
+    <Stack.Screen 
+      name="CreateTask" 
+      component={CreateTaskScreen}
+      options={{ title: 'Nova Tarefa' }}
     />
   </Stack.Navigator>
 );

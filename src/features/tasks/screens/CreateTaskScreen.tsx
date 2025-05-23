@@ -36,13 +36,25 @@ export function CreateTaskScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
+        <View style={styles.header}>
+          <Button
+            icon="close"
+            mode="text"
+            onPress={() => navigation.goBack()}
+            style={styles.cancelButton}
+            labelStyle={styles.buttonLabel}
+          >
+            Cancelar
+          </Button>
+        </View>
+
         <Controller
           control={control}
           name="title"
           rules={{ required: true }}
           render={({ field }) => (
             <TextInput
-              label="Title"
+              label="Título"
               value={field.value}
               onChangeText={field.onChange}
               style={styles.input}
@@ -56,7 +68,7 @@ export function CreateTaskScreen() {
           name="description"
           render={({ field }) => (
             <TextInput
-              label="Description"
+              label="Descrição"
               value={field.value}
               onChangeText={field.onChange}
               multiline
@@ -73,7 +85,7 @@ export function CreateTaskScreen() {
           style={styles.button}
           labelStyle={styles.buttonLabel}
         >
-          Criar Task
+          Criar Tarefa
         </Button>
       </View>
     </SafeAreaView>
@@ -89,6 +101,14 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: Theme.spacing.medium,
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginBottom: Theme.spacing.medium,
+  },
+  cancelButton: {
+    marginRight: -Theme.spacing.small,
   },
   input: {
     marginBottom: Theme.spacing.medium,

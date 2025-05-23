@@ -29,7 +29,7 @@ export function TaskListScreen() {
             style={styles.switchButton}
             labelStyle={styles.buttonLabel}
           >
-            Switch to Kanban
+            Mudar para Kanban
           </Button>
 
           <Button
@@ -46,7 +46,7 @@ export function TaskListScreen() {
           data={state.tasks}
           keyExtractor={item => item.id}
           renderItem={({ item }) => <TaskCard task={item} />}
-          ListEmptyComponent={<Text style={styles.empty}>No tasks found</Text>}
+          ListEmptyComponent={<Text style={styles.empty}>Nenhuma task encontrada</Text>}
           contentContainerStyle={styles.listContent}
         />
 
@@ -56,7 +56,7 @@ export function TaskListScreen() {
           style={styles.addButton}
           labelStyle={styles.addButtonLabel}
         >
-          Add Task
+          Adicionar Task
         </Button>
       </View>
     </SafeAreaView>
@@ -71,13 +71,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: Theme.spacing.medium,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: Theme.spacing.medium,
-    marginTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   listContent: {
     paddingBottom: Theme.spacing.xlarge,

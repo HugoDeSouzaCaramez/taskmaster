@@ -11,6 +11,8 @@ import { useTasks } from '../context/TaskContext';
 import { Task } from '../types';
 import { TaskCard } from '../components/TaskCard';
 import { Theme } from '../../../theme';
+import { Button } from 'react-native-paper';
+import { useNavigation } from '@react-navigation/native';
 
 const groupTasksByStatus = (tasks: Task[]) => {
   const sections = [
@@ -38,11 +40,24 @@ const groupTasksByStatus = (tasks: Task[]) => {
 
 export const KanbanScreen = () => {
   const { state } = useTasks();
+  const navigation = useNavigation();
   const sections = groupTasksByStatus(state.tasks);
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
+        <View style={styles.header}>
+          <Button
+            icon="arrow-left"
+            mode="text"
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}
+            labelStyle={styles.buttonLabel}
+          >
+            Voltar
+          </Button>
+        </View>
+        
         <SectionList
           sections={sections}
           keyExtractor={item => item.id}
@@ -68,6 +83,18 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: Theme.spacing.medium,
     paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingBottom: Theme.spacing.small,
+  },
+  backButton: {
+    marginLeft: -Theme.spacing.small,
+  },
+  buttonLabel: {
+    color: Theme.colors.primary,
+    fontSize: Theme.typography.body,
   },
   listContent: {
     paddingBottom: Theme.spacing.medium,

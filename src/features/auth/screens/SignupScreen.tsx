@@ -1,11 +1,12 @@
 import { Controller, useForm } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
 import { View, StyleSheet, Text } from 'react-native';
-import { Button, TextInput } from 'react-native-paper';
+import { Button, TextInput, ActivityIndicator } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { userService } from '../context/AuthContext';
 import { Theme } from '../../../theme';
+import { Feedback } from '../../../components/Feedback';
 
 type FormData = {
   email: string;
@@ -22,27 +23,37 @@ export function SignupScreen() {
   const { control, handleSubmit, watch, formState: { errors } } = useForm<FormData>({
     mode: 'onChange',
   });
-  const { dispatch } = useAuth();
+  const { state, dispatch } = useAuth();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const password = watch('password');
 
-  const onSubmit = async (data: FormData) => {
-    try {
-      if (data.password !== data.confirmPassword) {
-        dispatch({ type: 'SET_ERROR', error: 'As senhas não coincidem' });
-        return;
-      }
-
-      const newUser = await userService.createUser({
-        email: data.email,
-        password: data.password
-      });
-      
-      navigation.navigate('Login');
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', error: 'Erro no cadastro' });
+const onSubmit = async (data: FormData) => {
+  try {
+    dispatch({ type: 'SET_LOADING', isLoading: true });
+    
+    if (data.password !== data.confirmPassword) {
+      dispatch({ type: 'SET_ERROR', error: 'As senhas não coincidem' });
+      return;
     }
-  };
+
+    const newUser = await userService.createUser({
+      email: data.email,
+      password: data.password
+    });
+    
+    dispatch({ type: 'SET_SUCCESS', success: 'Cadastro realizado com sucesso!' });
+    
+    setTimeout(() => {
+      dispatch({ type: 'SET_SUCCESS', success: '' });
+      navigation.navigate('Login');
+    }, 2000);
+
+  } catch (error) {
+    dispatch({ type: 'SET_ERROR', error: 'Erro no cadastro' });
+  } finally {
+    dispatch({ type: 'SET_LOADING', isLoading: false });
+  }
+};
 
   return (
     <View style={styles.container}>
@@ -104,7 +115,7 @@ export function SignupScreen() {
           required: 'Confirme sua senha',
           validate: value => value === password || 'As senhas não coincidem'
         }}
-        render={({ field, fieldState }) => (
+        render={({ field }) => (
           <>
             <TextInput
               label="Confirmar Senha"
@@ -126,8 +137,13 @@ export function SignupScreen() {
         onPress={handleSubmit(onSubmit)}
         style={styles.button}
         labelStyle={styles.buttonLabel}
+        disabled={state.isLoading}
       >
-        Cadastre-se
+        {state.isLoading ? (
+          <ActivityIndicator color={Theme.colors.background} />
+        ) : (
+          'Cadastre-se'
+        )}
       </Button>
 
       <Button
@@ -138,6 +154,15 @@ export function SignupScreen() {
       >
         Já possui uma conta? Login
       </Button>
+
+      <View style={styles.feedbackContainer}>
+        <Feedback
+          isLoading={state.isLoading}
+          error={state.error}
+          success={state.success}
+          onDismiss={() => dispatch({ type: 'SET_ERROR', error: '' })}
+        />
+      </View>
     </View>
   );
 };
@@ -175,5 +200,10 @@ const styles = StyleSheet.create({
     fontSize: Theme.typography.body - 2,
     marginBottom: Theme.spacing.small,
     marginLeft: Theme.spacing.xsmall,
+  },
+  feedbackContainer: {
+    position: 'absolute',
+    top: 0,
+    width: '100%',
   },
 });

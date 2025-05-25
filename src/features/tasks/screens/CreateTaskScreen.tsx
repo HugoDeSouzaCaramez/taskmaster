@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { View, StyleSheet, SafeAreaView, Platform, StatusBar, Text } from 'react-native';
-import { Button, TextInput } from 'react-native-paper';
+import { Button, TextInput, Snackbar, ActivityIndicator } from 'react-native-paper';
 import { useTasks } from '../context/TaskContext';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -18,7 +19,8 @@ type RootStackParamList = {
 };
 
 export function CreateTaskScreen() {
-  const { control, handleSubmit, formState: { errors } } = useForm<FormData>();
+  const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>();
+  const [showSuccess, setShowSuccess] = useState(false);
   const { dispatch } = useTasks();
   const { state: authState } = useAuth();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -35,7 +37,11 @@ export function CreateTaskScreen() {
     };
     
     dispatch({ type: 'ADD_TASK', task: newTask });
-    navigation.goBack();
+    setShowSuccess(true);
+    
+    setTimeout(() => {
+      navigation.goBack();
+    }, 2000);
   };
 
   return (
@@ -112,9 +118,23 @@ export function CreateTaskScreen() {
           onPress={handleSubmit(onSubmit)}
           style={styles.button}
           labelStyle={styles.buttonLabel}
+          disabled={isSubmitting}
         >
-          Criar Tarefa
+          {isSubmitting ? (
+            <ActivityIndicator color={Theme.colors.background} />
+          ) : (
+            'Criar Tarefa'
+          )}
         </Button>
+
+        <Snackbar
+          visible={showSuccess}
+          onDismiss={() => setShowSuccess(false)}
+          duration={1500}
+          style={[styles.snackbar, { backgroundColor: Theme.colors.secondary }]}
+        >
+          Tarefa criada com sucesso!
+        </Snackbar>
       </View>
     </SafeAreaView>
   );
@@ -161,5 +181,9 @@ const styles = StyleSheet.create({
     fontSize: Theme.typography.body - 2,
     marginBottom: Theme.spacing.small,
     marginLeft: Theme.spacing.xsmall,
+  },
+  snackbar: {
+    margin: Theme.spacing.medium,
+    borderRadius: Theme.borderRadius.medium,
   },
 });

@@ -12,13 +12,15 @@ type AuthState = {
   user: User | null;
   isLoading: boolean;
   error: string | null;
+  success: string | null;
 };
 
 type AuthAction =
   | { type: 'SIGN_IN'; user: User }
   | { type: 'SIGN_OUT' }
   | { type: 'SET_LOADING'; isLoading: boolean }
-  | { type: 'SET_ERROR'; error: string };
+  | { type: 'SET_ERROR'; error: string }
+  | { type: 'SET_SUCCESS'; success: string };
 
 const AuthContext = createContext<{
   state: AuthState;
@@ -28,13 +30,24 @@ const AuthContext = createContext<{
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
     case 'SIGN_IN':
-      return { ...state, user: action.user, error: null };
+      return { 
+        ...state, 
+        user: action.user, 
+        error: null, 
+        success: 'Login realizado com sucesso!' 
+      };
     case 'SIGN_OUT':
-      return { ...state, user: null };
+      return { 
+        ...state, 
+        user: null, 
+        success: 'Logout realizado com sucesso!' 
+      };
     case 'SET_LOADING':
       return { ...state, isLoading: action.isLoading };
     case 'SET_ERROR':
-      return { ...state, error: action.error };
+      return { ...state, error: action.error, success: null };
+    case 'SET_SUCCESS':
+      return { ...state, success: action.success, error: null };
     default:
       return state;
   }
@@ -79,6 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user: null,
     isLoading: true,
     error: null,
+    success: null,
   });
 
   useEffect(() => {
@@ -90,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           dispatch({ type: 'SIGN_IN', user });
         }
       } catch (e) {
-        console.error('Error loading user:', e);
+        dispatch({ type: 'SET_ERROR', error: 'Erro ao carregar usuário' });
       } finally {
         dispatch({ type: 'SET_LOADING', isLoading: false });
       }

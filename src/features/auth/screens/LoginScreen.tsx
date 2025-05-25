@@ -1,11 +1,12 @@
 import { Controller, useForm } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
 import { View, StyleSheet, Text } from 'react-native';
-import { Button, TextInput } from 'react-native-paper';
+import { Button, TextInput, ActivityIndicator } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { userService } from '../context/AuthContext';
 import { Theme } from '../../../theme';
+import { Feedback } from '../../../components/Feedback';
 
 type FormData = {
   email: string;
@@ -21,11 +22,12 @@ export function LoginScreen() {
   const { control, handleSubmit, formState: { errors } } = useForm<FormData>({
     mode: 'onChange',
   });
-  const { dispatch } = useAuth();
+  const { state, dispatch } = useAuth();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
   const onSubmit = async (data: FormData) => {
     try {
+      dispatch({ type: 'SET_LOADING', isLoading: true });
       const user = await userService.login(data.email, data.password);
       
       if (user) {
@@ -35,6 +37,8 @@ export function LoginScreen() {
       }
     } catch (error) {
       dispatch({ type: 'SET_ERROR', error: 'Erro no login' });
+    } finally {
+      dispatch({ type: 'SET_LOADING', isLoading: false });
     }
   };
 
@@ -96,8 +100,13 @@ export function LoginScreen() {
         onPress={handleSubmit(onSubmit)}
         style={styles.button}
         labelStyle={styles.buttonLabel}
+        disabled={state.isLoading}
       >
-        Entrar
+        {state.isLoading ? (
+          <ActivityIndicator color={Theme.colors.background} />
+        ) : (
+          'Entrar'
+        )}
       </Button>
 
       <Button
@@ -108,6 +117,15 @@ export function LoginScreen() {
       >
         Não possui uma conta? Cadastre-se
       </Button>
+
+      <View style={styles.feedbackContainer}>
+        <Feedback
+          isLoading={state.isLoading}
+          error={state.error}
+          success={state.success}
+          onDismiss={() => dispatch({ type: 'SET_ERROR', error: '' })}
+        />
+      </View>
     </View>
   );
 };
@@ -145,5 +163,10 @@ const styles = StyleSheet.create({
     fontSize: Theme.typography.body - 2,
     marginBottom: Theme.spacing.small,
     marginLeft: Theme.spacing.xsmall,
+  },
+  feedbackContainer: {
+    position: 'absolute',
+    top: 0,
+    width: '100%',
   },
 });

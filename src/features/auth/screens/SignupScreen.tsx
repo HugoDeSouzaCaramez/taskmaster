@@ -1,10 +1,11 @@
 import { Controller, useForm } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import { Button, TextInput } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { userService } from '../context/AuthContext';
+import { Theme } from '../../../theme';
 
 type FormData = {
   email: string;
@@ -18,7 +19,9 @@ type RootStackParamList = {
 };
 
 export function SignupScreen() {
-  const { control, handleSubmit, watch } = useForm<FormData>();
+  const { control, handleSubmit, watch, formState: { errors } } = useForm<FormData>({
+    mode: 'onChange',
+  });
   const { dispatch } = useAuth();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const password = watch('password');
@@ -46,31 +49,51 @@ export function SignupScreen() {
       <Controller
         control={control}
         name="email"
-        rules={{ required: true }}
+        rules={{
+          required: 'Email é obrigatório',
+          pattern: {
+            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+            message: 'Email inválido'
+          }
+        }}
         render={({ field }) => (
-          <TextInput
-            label="Email"
-            value={field.value}
-            onChangeText={field.onChange}
-            style={styles.input}
-            autoCapitalize="none"
-            keyboardType="email-address"
-          />
+          <>
+            <TextInput
+              label="Email"
+              value={field.value}
+              onChangeText={field.onChange}
+              style={styles.input}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              error={!!errors.email}
+            />
+            {errors.email && <Text style={styles.error}>{errors.email.message}</Text>}
+          </>
         )}
       />
 
       <Controller
         control={control}
         name="password"
-        rules={{ required: true, minLength: 6 }}
+        rules={{
+          required: 'Senha é obrigatória',
+          minLength: {
+            value: 6,
+            message: 'Mínimo de 6 caracteres'
+          }
+        }}
         render={({ field }) => (
-          <TextInput
-            label="Password"
-            value={field.value}
-            onChangeText={field.onChange}
-            secureTextEntry
-            style={styles.input}
-          />
+          <>
+            <TextInput
+              label="Senha"
+              value={field.value}
+              onChangeText={field.onChange}
+              secureTextEntry
+              style={styles.input}
+              error={!!errors.password}
+            />
+            {errors.password && <Text style={styles.error}>{errors.password.message}</Text>}
+          </>
         )}
       />
 
@@ -78,18 +101,23 @@ export function SignupScreen() {
         control={control}
         name="confirmPassword"
         rules={{
-          required: true,
-          validate: value => value === password || 'Passwords do not match'
+          required: 'Confirme sua senha',
+          validate: value => value === password || 'As senhas não coincidem'
         }}
         render={({ field, fieldState }) => (
-          <TextInput
-            label="Confirm Password"
-            value={field.value}
-            onChangeText={field.onChange}
-            secureTextEntry
-            style={styles.input}
-            error={!!fieldState.error}
-          />
+          <>
+            <TextInput
+              label="Confirmar Senha"
+              value={field.value}
+              onChangeText={field.onChange}
+              secureTextEntry
+              style={styles.input}
+              error={!!errors.confirmPassword}
+            />
+            {errors.confirmPassword && (
+              <Text style={styles.error}>{errors.confirmPassword.message}</Text>
+            )}
+          </>
         )}
       />
 
@@ -97,6 +125,7 @@ export function SignupScreen() {
         mode="contained"
         onPress={handleSubmit(onSubmit)}
         style={styles.button}
+        labelStyle={styles.buttonLabel}
       >
         Cadastre-se
       </Button>
@@ -105,6 +134,7 @@ export function SignupScreen() {
         mode="text"
         onPress={() => navigation.navigate('Login')}
         style={styles.link}
+        labelStyle={styles.linkLabel}
       >
         Já possui uma conta? Login
       </Button>
@@ -116,17 +146,34 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    padding: 20,
+    padding: Theme.spacing.medium,
+    backgroundColor: Theme.colors.background,
   },
   input: {
-    marginBottom: 15,
+    marginBottom: Theme.spacing.small,
+    backgroundColor: Theme.colors.background,
   },
   button: {
-    marginTop: 20,
-    paddingVertical: 5,
+    marginTop: Theme.spacing.medium,
+    paddingVertical: Theme.spacing.small,
+    borderRadius: Theme.borderRadius.medium,
+    backgroundColor: Theme.colors.primary,
+  },
+  buttonLabel: {
+    color: Theme.colors.background,
+    fontSize: Theme.typography.body,
   },
   link: {
-    marginTop: 15,
+    marginTop: Theme.spacing.medium,
     alignSelf: 'center',
+  },
+  linkLabel: {
+    color: Theme.colors.primary,
+  },
+  error: {
+    color: Theme.colors.error,
+    fontSize: Theme.typography.body - 2,
+    marginBottom: Theme.spacing.small,
+    marginLeft: Theme.spacing.xsmall,
   },
 });

@@ -1,5 +1,5 @@
 import { Controller, useForm } from 'react-hook-form';
-import { View, StyleSheet, SafeAreaView, Platform, StatusBar } from 'react-native';
+import { View, StyleSheet, SafeAreaView, Platform, StatusBar, Text } from 'react-native';
 import { Button, TextInput } from 'react-native-paper';
 import { useTasks } from '../context/TaskContext';
 import { useNavigation } from '@react-navigation/native';
@@ -18,7 +18,7 @@ type RootStackParamList = {
 };
 
 export function CreateTaskScreen() {
-  const { control, handleSubmit } = useForm<FormData>();
+  const { control, handleSubmit, formState: { errors } } = useForm<FormData>();
   const { dispatch } = useTasks();
   const { state: authState } = useAuth();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -56,31 +56,54 @@ export function CreateTaskScreen() {
         <Controller
           control={control}
           name="title"
-          rules={{ required: true }}
+          rules={{
+            required: 'Título é obrigatório',
+            minLength: {
+              value: 3,
+              message: 'Mínimo de 3 caracteres'
+            }
+          }}
           render={({ field }) => (
-            <TextInput
-              label="Título"
-              value={field.value}
-              onChangeText={field.onChange}
-              style={styles.input}
-              mode="outlined"
-            />
+            <>
+              <TextInput
+                label="Título"
+                value={field.value}
+                onChangeText={field.onChange}
+                style={styles.input}
+                mode="outlined"
+                error={!!errors.title}
+              />
+              {errors.title && <Text style={styles.error}>{errors.title.message}</Text>}
+            </>
           )}
         />
 
         <Controller
           control={control}
           name="description"
+          rules={{
+            required: 'Descrição é obrigatória',
+            minLength: {
+              value: 10,
+              message: 'Mínimo de 10 caracteres'
+            }
+          }}
           render={({ field }) => (
-            <TextInput
-              label="Descrição"
-              value={field.value}
-              onChangeText={field.onChange}
-              multiline
-              style={[styles.input, styles.descriptionInput]}
-              mode="outlined"
-              numberOfLines={4}
-            />
+            <>
+              <TextInput
+                label="Descrição"
+                value={field.value}
+                onChangeText={field.onChange}
+                multiline
+                style={[styles.input, styles.descriptionInput]}
+                mode="outlined"
+                numberOfLines={4}
+                error={!!errors.description}
+              />
+              {errors.description && (
+                <Text style={styles.error}>{errors.description.message}</Text>
+              )}
+            </>
           )}
         />
 
@@ -116,7 +139,7 @@ const styles = StyleSheet.create({
     marginRight: -Theme.spacing.small,
   },
   input: {
-    marginBottom: Theme.spacing.medium,
+    marginBottom: Theme.spacing.small,
     backgroundColor: Theme.colors.background,
   },
   descriptionInput: {
@@ -124,13 +147,19 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   button: {
-    marginTop: Theme.spacing.large,
+    marginTop: Theme.spacing.medium,
     borderRadius: Theme.borderRadius.medium,
-    paddingVertical: Theme.spacing.xsmall,
+    paddingVertical: Theme.spacing.small,
     backgroundColor: Theme.colors.primary,
   },
   buttonLabel: {
     fontSize: Theme.typography.body,
     color: Theme.colors.background,
+  },
+  error: {
+    color: Theme.colors.error,
+    fontSize: Theme.typography.body - 2,
+    marginBottom: Theme.spacing.small,
+    marginLeft: Theme.spacing.xsmall,
   },
 });

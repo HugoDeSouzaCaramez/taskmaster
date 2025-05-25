@@ -1,9 +1,9 @@
 import { createStackNavigator } from '@react-navigation/stack';
 import { IconButton } from 'react-native-paper';
-import { KanbanScreen } from '../screens/KanbanScreen';
 import { TaskListScreen } from '../screens/TaskListScreen';
 import { CreateTaskScreen } from '../screens/CreateTaskScreen';
 import { Theme } from '../../../theme';
+import KanbanScreen from '../screens/KanbanScreen';
 
 const Stack = createStackNavigator();
 

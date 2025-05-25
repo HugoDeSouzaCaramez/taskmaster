@@ -1,17 +1,20 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Task } from '../types';
 
 type Props = {
   task: Task;
+  onPress?: () => void;
 };
 
-export const TaskCard = ({ task }: Props) => (
-  <View style={styles.card}>
-    <Text style={styles.title}>{task.title}</Text>
-    <Text>{task.description}</Text>
-    <Text style={styles.status}>{task.status.toUpperCase()}</Text>
-  </View>
+export const TaskCard = ({ task, onPress }: Props) => (
+  <TouchableOpacity onPress={onPress}>
+    <View style={styles.card}>
+      <Text style={styles.title}>{task.title}</Text>
+      <Text>{task.description}</Text>
+      <Text style={styles.status}>{task.status.toUpperCase()}</Text>
+    </View>
+  </TouchableOpacity>
 );
 
 const styles = StyleSheet.create({

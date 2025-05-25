@@ -6,17 +6,19 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { Button } from 'react-native-paper';
 import { useAuth } from '../../auth/context/AuthContext';
 import { userService } from '../../auth/context/AuthContext';
+import { Swipeable } from 'react-native-gesture-handler';
 import { Theme } from '../../../theme';
 
 type RootStackParamList = {
   Kanban: undefined;
   CreateTask: undefined;
+  EditTask: { task: any };
 };
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
 export function TaskListScreen() {
-  const { state } = useTasks();
+  const { state, dispatch } = useTasks();
   const { dispatch: authDispatch, state: authState } = useAuth();
   const navigation = useNavigation<NavigationProp>();
 
@@ -27,6 +29,26 @@ export function TaskListScreen() {
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
     }
+  };
+
+
+  const handleDelete = (taskId: string) => {
+    dispatch({ type: 'DELETE_TASK', id: taskId });
+  };
+
+  const renderRightActions = (taskId: string) => {
+    return (
+      <View style={styles.deleteContainer}>
+        <Button
+          mode="contained"
+          onPress={() => handleDelete(taskId)}
+          style={styles.deleteButton}
+          labelStyle={styles.deleteLabel}
+        >
+          Excluir
+        </Button>
+      </View>
+    );
   };
 
   return (
@@ -55,7 +77,14 @@ export function TaskListScreen() {
         <FlatList
           data={state.tasks.filter(task => task.userId === authState.user?.id)}
           keyExtractor={item => item.id}
-          renderItem={({ item }) => <TaskCard task={item} />}
+          renderItem={({ item }) => (
+            <Swipeable renderRightActions={() => renderRightActions(item.id)}>
+              <TaskCard
+                task={item}
+                onPress={() => navigation.navigate('EditTask', { task: item })}
+              />
+            </Swipeable>
+          )}
           ListEmptyComponent={<Text style={styles.empty}>Nenhuma task encontrada</Text>}
           contentContainerStyle={styles.listContent}
         />
@@ -121,5 +150,21 @@ const styles = StyleSheet.create({
   addButtonLabel: {
     color: Theme.colors.background,
     fontSize: Theme.typography.body,
+  },
+  deleteContainer: {
+    backgroundColor: Theme.colors.error,
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    width: 100,
+    marginVertical: Theme.spacing.xsmall,
+  },
+  deleteButton: {
+    height: '100%',
+    borderRadius: 0,
+    backgroundColor: Theme.colors.error,
+  },
+  deleteLabel: {
+    color: Theme.colors.background,
+    fontSize: Theme.typography.body - 2,
   },
 });

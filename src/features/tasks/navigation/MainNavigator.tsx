@@ -4,6 +4,7 @@ import { TaskListScreen } from '../screens/TaskListScreen';
 import { CreateTaskScreen } from '../screens/CreateTaskScreen';
 import { Theme } from '../../../theme';
 import KanbanScreen from '../screens/KanbanScreen';
+import { EditTaskScreen } from '../screens/EditTaskScreen';
 
 const Stack = createStackNavigator();
 
@@ -43,6 +44,11 @@ export const MainNavigator = () => (
       name="CreateTask" 
       component={CreateTaskScreen}
       options={{ title: 'Nova Tarefa' }}
+    />
+    <Stack.Screen 
+      name="EditTask" 
+      component={EditTaskScreen}
+      options={{ title: 'Editar Tarefa' }}
     />
   </Stack.Navigator>
 );

@@ -117,9 +117,9 @@ export function EditTaskScreen() {
               value={field.value}
               onValueChange={field.onChange}
               buttons={[
-                { value: 'todo', label: 'To Do' },
-                { value: 'in_progress', label: 'In Progress' },
-                { value: 'done', label: 'Done' },
+                { value: 'todo', label: 'Para Fazer' },
+                { value: 'in_progress', label: 'Em Andamento' },
+                { value: 'done', label: 'Concluída' },
               ]}
               style={styles.segmented}
             />

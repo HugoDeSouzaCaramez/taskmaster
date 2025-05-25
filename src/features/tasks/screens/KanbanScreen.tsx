@@ -20,9 +20,9 @@ const columns: {
   title: string; 
   status: Task['status'] 
 }[] = [
-  { title: 'To Do', status: 'todo' },
-  { title: 'In Progress', status: 'in_progress' },
-  { title: 'Done', status: 'done' },
+  { title: 'Para Fazer', status: 'todo' },
+  { title: 'Em Andamento', status: 'in_progress' },
+  { title: 'Concluída', status: 'done' },
 ];
 
 const KanbanScreen = () => {

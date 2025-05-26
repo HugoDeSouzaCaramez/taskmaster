@@ -11,6 +11,9 @@ import { Theme } from './src/theme';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect } from 'react';
 import uuid from 'react-native-uuid';
+import 'expo-crypto';
+import 'react-native-get-random-values';
+
 
 const Stack = createStackNavigator();
 
@@ -39,7 +42,6 @@ export default function App() {
         const existingUsers = await AsyncStorage.getItem('users');
         if (!existingUsers) {
           await AsyncStorage.setItem('users', JSON.stringify(mockUsers));
-          await AsyncStorage.setItem(`tasks_${mockUsers[0].id}`, JSON.stringify(mockTasks));
         }
       } catch (error) {
         console.error('Error initializing mock data:', error);

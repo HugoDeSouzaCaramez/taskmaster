@@ -36,20 +36,24 @@ const onSubmit = async (data: FormData) => {
       return;
     }
 
-    const newUser = await userService.createUser({
+    const newUser = await userService.register({
       email: data.email,
       password: data.password
     });
     
+    dispatch({ type: 'SIGN_IN', user: newUser });
     dispatch({ type: 'SET_SUCCESS', success: 'Cadastro realizado com sucesso!' });
     
     setTimeout(() => {
-      dispatch({ type: 'SET_SUCCESS', success: '' });
-      navigation.navigate('Login');
+      navigation.navigate('Main');
     }, 2000);
 
   } catch (error) {
-    dispatch({ type: 'SET_ERROR', error: 'Erro no cadastro' });
+    const errorMessage = error instanceof Error 
+      ? error.message 
+      : 'Erro desconhecido ao realizar cadastro';
+    
+    dispatch({ type: 'SET_ERROR', error: errorMessage });
   } finally {
     dispatch({ type: 'SET_LOADING', isLoading: false });
   }

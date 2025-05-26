@@ -1,7 +1,7 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createContext, useContext, useEffect, useReducer } from 'react';
+import React, { createContext, useContext, useEffect, useReducer } from 'react';
 import { Task } from '../types';
 import { useAuth } from '../../auth/context/AuthContext';
+import apiClient from '../../../services/apiClient';
 
 type TaskState = {
   tasks: Task[];
@@ -13,10 +13,16 @@ type TaskAction =
   | { type: 'DELETE_TASK'; id: string }
   | { type: 'LOAD_TASKS'; tasks: Task[] };
 
-const TaskContext = createContext<{
+type TaskContextType = {
   state: TaskState;
   dispatch: React.Dispatch<TaskAction>;
-}>(null!);
+  loadTasks: () => Promise<void>;
+  addTask: (task: Omit<Task, 'id'>) => Promise<void>;
+  updateTask: (id: string, updates: Partial<Task>) => Promise<void>;
+  deleteTask: (id: string) => Promise<void>;
+};
+
+const TaskContext = createContext<TaskContextType>(null!);
 
 const taskReducer = (state: TaskState, action: TaskAction): TaskState => {
   switch (action.type) {
@@ -41,43 +47,69 @@ export function TaskProvider({ children }: { children: React.ReactNode }) {
   const { state: authState } = useAuth();
   const [state, dispatch] = useReducer(taskReducer, { tasks: [] });
 
+  const loadTasks = async () => {
+    if (!authState.user) return;
+    
+    try {
+      const response = await apiClient.get('/tasks');
+      dispatch({ type: 'LOAD_TASKS', tasks: response.data });
+    } catch (error) {
+      console.error('Error loading tasks:', error);
+    }
+  };
+
+  const addTask = async (taskData: Omit<Task, 'id'>) => {
+    try {
+      const response = await apiClient.post('/tasks', taskData);
+      dispatch({ type: 'ADD_TASK', task: response.data });
+    } catch (error) {
+      console.error('Error adding task:', error);
+      throw error;
+    }
+  };
+
+  const updateTask = async (id: string, updates: Partial<Task>) => {
+    try {
+      const response = await apiClient.patch(`/tasks/${id}`, updates);
+      dispatch({ type: 'UPDATE_TASK', id, updates: response.data });
+    } catch (error) {
+      console.error('Error updating task:', error);
+      throw error;
+    }
+  };
+
+  const deleteTask = async (id: string) => {
+    try {
+      await apiClient.delete(`/tasks/${id}`);
+      dispatch({ type: 'DELETE_TASK', id });
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
-    const loadTasks = async () => {
-      if (!authState.user) {
-        dispatch({ type: 'LOAD_TASKS', tasks: [] });
-        return;
-      }
-      
-      try {
-        const savedTasks = await AsyncStorage.getItem(`tasks_${authState.user.id}`);
-        if (savedTasks) {
-          dispatch({ type: 'LOAD_TASKS', tasks: JSON.parse(savedTasks) });
-        }
-      } catch (error) {
-        console.error('Error loading tasks:', error);
-      }
-    };
     loadTasks();
   }, [authState.user]);
 
-  useEffect(() => {
-    const saveTasks = async () => {
-      if (!authState.user) return;
-      
-      try {
-        await AsyncStorage.setItem(`tasks_${authState.user.id}`, JSON.stringify(state.tasks));
-      } catch (error) {
-        console.error('Error saving tasks:', error);
-      }
-    };
-    saveTasks();
-  }, [state.tasks, authState.user]);
-
   return (
-    <TaskContext.Provider value={{ state, dispatch }}>
+    <TaskContext.Provider value={{ 
+      state, 
+      dispatch,
+      loadTasks,
+      addTask,
+      updateTask,
+      deleteTask
+    }}>
       {children}
     </TaskContext.Provider>
   );
 };
 
-export const useTasks = () => useContext(TaskContext);
+export const useTasks = () => {
+  const context = useContext(TaskContext);
+  if (!context) {
+    throw new Error('useTasks must be used within a TaskProvider');
+  }
+  return context;
+};

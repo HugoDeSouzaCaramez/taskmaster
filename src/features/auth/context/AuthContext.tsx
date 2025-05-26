@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import uuid from 'react-native-uuid';
+import apiClient from '../../../services/apiClient';
 
 type User = {
   id: string;
@@ -54,39 +54,43 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
 };
 
 export const userService = {
-  createUser: async (userData: Omit<User, 'id'>): Promise<User> => {
-    const users = await AsyncStorage.getItem('users');
-    const newUser = { ...userData, id: uuid.v4() };
-    
-    if (users) {
-      const parsedUsers = JSON.parse(users);
-      await AsyncStorage.setItem('users', JSON.stringify([...parsedUsers, newUser]));
-    } else {
-      await AsyncStorage.setItem('users', JSON.stringify([newUser]));
+  login: async (email: string, password: string) => {
+    try {
+      const response = await apiClient.post('/auth/login', { email, password });
+      await AsyncStorage.setItem('authToken', response.data.token);
+      return response.data.user;
+    } catch (error) {
+      if (isApiError(error)) {
+        throw new Error(error.response.data.message || 'Login failed');
+      }
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error('Falha desconhecida no login');
     }
-    
-    await AsyncStorage.setItem('currentUser', JSON.stringify(newUser));
-    return newUser;
   },
 
-  login: async (email: string, password: string): Promise<User | null> => {
-    const users = await AsyncStorage.getItem('users');
-    if (users) {
-      const parsedUsers: User[] = JSON.parse(users);
-      const user = parsedUsers.find(u => u.email === email && u.password === password);
-      if (user) {
-        await AsyncStorage.setItem('currentUser', JSON.stringify(user));
+  register: async (userData: Omit<User, 'id'>) => {
+    try {
+      const response = await apiClient.post('/auth/register', userData);
+      await AsyncStorage.setItem('authToken', response.data.token);
+      await AsyncStorage.setItem('currentUser', JSON.stringify(response.data.user));
+      return response.data.user;
+    } catch (error) {
+      if (isApiError(error)) {
+        throw new Error(error.response.data.message || 'Registration failed');
       }
-      return user || null;
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error('Falha desconhecida no registro');
     }
-    return null;
   },
 
   logout: async () => {
-    await AsyncStorage.removeItem('currentUser');
+    await AsyncStorage.removeItem('authToken');
   }
 };
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, {
     user: null,
@@ -126,4 +130,17 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+};
+
+const isApiError = (error: unknown): error is { 
+  response: { 
+    data: { 
+      message: string 
+    } 
+  } 
+} => {
+  return typeof error === 'object' && 
+         error !== null && 
+         'response' in error && 
+         typeof (error as any).response.data?.message === 'string';
 };

@@ -1,13 +1,20 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { View, StyleSheet, SafeAreaView, Platform, StatusBar, Text } from 'react-native';
-import { Button, TextInput, Snackbar, ActivityIndicator } from 'react-native-paper';
-import { useTasks } from '../context/TaskContext';
+import { 
+  View, 
+  StyleSheet, 
+  SafeAreaView, 
+  Platform, 
+  StatusBar, 
+  Text 
+} from 'react-native';
+import { Button, TextInput, ActivityIndicator } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import uuid from 'react-native-uuid';
-import { Theme } from '../../../theme';
+import { useTasks } from '../context/TaskContext';
 import { useAuth } from '../../auth/context/AuthContext';
+import { Theme } from '../../../theme';
+import { Feedback } from '../../../components/Feedback';
 
 type FormData = {
   title: string;
@@ -19,29 +26,36 @@ type RootStackParamList = {
 };
 
 export function CreateTaskScreen() {
-  const { control, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>();
-  const [showSuccess, setShowSuccess] = useState(false);
-  const { dispatch } = useTasks();
+  const { control, handleSubmit, formState: { isSubmitting } } = useForm<FormData>();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const { addTask } = useTasks();
   const { state: authState } = useAuth();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
-  const onSubmit = (data: FormData) => {
-    if (!authState.user) return;
-    
-    const newTask = {
-      id: uuid.v4(),
-      title: data.title,
-      description: data.description,
-      status: 'todo' as const,
-      userId: authState.user.id
-    };
-    
-    dispatch({ type: 'ADD_TASK', task: newTask });
-    setShowSuccess(true);
-    
-    setTimeout(() => {
-      navigation.goBack();
-    }, 2000);
+  const onSubmit = async (data: FormData) => {
+    try {
+      if (!authState.user) {
+        throw new Error('User not authenticated');
+      }
+
+      const newTask = {
+        ...data,
+        status: 'todo' as const,
+        userId: authState.user.id
+      };
+
+      await addTask(newTask);
+      setSuccessMessage('Tarefa criada com sucesso!');
+      
+      setTimeout(() => {
+        navigation.goBack();
+      }, 2000);
+
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Erro ao criar tarefa');
+      setTimeout(() => setErrorMessage(null), 3000);
+    }
   };
 
   return (
@@ -69,7 +83,7 @@ export function CreateTaskScreen() {
               message: 'Mínimo de 3 caracteres'
             }
           }}
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <>
               <TextInput
                 label="Título"
@@ -77,9 +91,11 @@ export function CreateTaskScreen() {
                 onChangeText={field.onChange}
                 style={styles.input}
                 mode="outlined"
-                error={!!errors.title}
+                error={!!fieldState.error}
               />
-              {errors.title && <Text style={styles.error}>{errors.title.message}</Text>}
+              {fieldState.error && (
+                <Text style={styles.error}>{fieldState.error.message}</Text>
+              )}
             </>
           )}
         />
@@ -94,7 +110,7 @@ export function CreateTaskScreen() {
               message: 'Mínimo de 10 caracteres'
             }
           }}
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <>
               <TextInput
                 label="Descrição"
@@ -104,10 +120,10 @@ export function CreateTaskScreen() {
                 style={[styles.input, styles.descriptionInput]}
                 mode="outlined"
                 numberOfLines={4}
-                error={!!errors.description}
+                error={!!fieldState.error}
               />
-              {errors.description && (
-                <Text style={styles.error}>{errors.description.message}</Text>
+              {fieldState.error && (
+                <Text style={styles.error}>{fieldState.error.message}</Text>
               )}
             </>
           )}
@@ -127,14 +143,15 @@ export function CreateTaskScreen() {
           )}
         </Button>
 
-        <Snackbar
-          visible={showSuccess}
-          onDismiss={() => setShowSuccess(false)}
-          duration={1500}
-          style={[styles.snackbar, { backgroundColor: Theme.colors.secondary }]}
-        >
-          Tarefa criada com sucesso!
-        </Snackbar>
+        <Feedback
+          isLoading={isSubmitting}
+          error={errorMessage}
+          success={successMessage}
+          onDismiss={() => {
+            setErrorMessage(null);
+            setSuccessMessage(null);
+          }}
+        />
       </View>
     </SafeAreaView>
   );
@@ -181,9 +198,5 @@ const styles = StyleSheet.create({
     fontSize: Theme.typography.body - 2,
     marginBottom: Theme.spacing.small,
     marginLeft: Theme.spacing.xsmall,
-  },
-  snackbar: {
-    margin: Theme.spacing.medium,
-    borderRadius: Theme.borderRadius.medium,
   },
 });

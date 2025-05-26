@@ -15,24 +15,23 @@ O TaskMaster é um aplicativo móvel para gerenciamento de tarefas pessoais com:
 
 ## 🚀 Instalação e Execução
 1. Clone o repositório
-```bash
 git clone https://github.com/HugoDeSouzaCaramez/taskmaster.git
 cd taskmaster
 
 ## Instale as dependências
-yarn install
+2. yarn install
 
 ## Configure o ambiente (opcional) Edite o arquivo src/config/environment.ts se necessário
-export const Environment = {
+3. export const Environment = {
   API_BASE_URL: 'http://sua-api-real.com',
   MOCK_API: false
 };
 
 ## Inicie o projeto
-yarn start
+4. yarn start
 
 ## Opções de execução
-Android (emulador/dispositivo físico):
+5. Android (emulador/dispositivo físico):
 Pressione a no terminal Expo ou escaneie o QR code com o app Expo Go
 
 iOS (simulador/dispositivo físico):
@@ -42,14 +41,14 @@ Web:
 Pressione w no terminal Expo
 
 ## 🔧 Desenvolvimento
-Criando uma development build (Android)
+6. Criando uma development build (Android)
 bash
 npm install -g eas-cli
 eas build:configure
 eas build --profile development --platform android
 
 ## 📚 Bibliotecas Principais
-React Native 0.79.2
+7. React Native 0.79.2
 
 React Navigation 7.x
 
@@ -62,6 +61,6 @@ Axios + Mock Adapter
 Reanimated + Gesture Handler (para interações)
 
 ## Link APK
-https://expo.dev/accounts/hugodesouzacaramez/projects/taskmaster/builds/f11961a0-345e-4668-b02e-8d5d142189cd
+8. https://expo.dev/accounts/hugodesouzacaramez/projects/taskmaster/builds/f11961a0-345e-4668-b02e-8d5d142189cd
 
 

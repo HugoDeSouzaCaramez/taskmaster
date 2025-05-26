@@ -61,4 +61,7 @@ Axios + Mock Adapter
 
 Reanimated + Gesture Handler (para interações)
 
+## Link APK
+https://expo.dev/accounts/hugodesouzacaramez/projects/taskmaster/builds/f11961a0-345e-4668-b02e-8d5d142189cd
+
 
